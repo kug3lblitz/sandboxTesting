@@ -1,0 +1,102 @@
+$c: #2143ac;
+$cube-edge: 27em;
+$n-strips: 3;
+$strip-size: $cube-edge/$n-strips;
+$gap: .125*$strip-size;
+$tile-size: $strip-size - $gap;
+$normal-offset: .5*($gap - $cube-edge);
+$t: 1s;
+$m: 6;
+
+@mixin tile($off: 0, $jump: 2) {
+	$sh: (); // init shadow list
+	$n: ceil(($n-strips - $off)/$jump);
+	
+	@for $i from 0 to $n-strips {
+		@for $j from 0 to $n {
+			$sh: $sh, $i*$strip-size 
+				$j*$jump*$strip-size currentColor;
+		}
+	}
+	
+	top: $normal-offset + $off*$strip-size;
+	box-shadow: $sh;
+}
+
+body {
+	overflow: hidden;
+	font-size: 1vmin;
+	background: #000;
+}
+
+div {
+	position: absolute;
+	top: 50%; left: 50%;
+	transform-style: preserve-3d;
+}
+
+.axis-switcher {
+	animation: switch $m*$t steps(1) infinite;
+}
+
+@keyframes switch {
+	@for $i from 1 to $m {
+		$j: $i%2;
+		$k: floor($i/2);
+		
+		#{$i*100%/$m} {
+			transform: if($k < 1, (), 
+				rotate3d(1 - $j, 0, $j, 90deg)) 
+				if($k%2 < 1, rotate(.5turn), ());
+		}
+	}
+}
+
+.cube {
+	transform: rotateX(-35deg) rotateY(45deg);
+	color: $c;
+	
+	&__comp {
+		&:first-child {
+			* {
+				transform: rotateX(-90deg) translateZ(.5*$cube-edge);
+			}
+			:before { @include tile(1, 1); }
+		}
+		
+		&:last-child {
+			animation: r $t cubic-bezier(.68, -.55, .265, 1.55) infinite;
+		}
+	}
+	
+	&__face {
+		backface-visibility: hidden;
+		transform: rotateX(90deg) translateZ(.5*$cube-edge);
+		
+		&:before {
+			position: absolute;
+			left: $normal-offset;
+			width: $tile-size;
+			height: $tile-size;
+			border-radius: 4px;
+			@include tile(0, 3);
+			background: currentColor;
+			content: '';
+		}
+		
+		@for $i from 0 to 4 {
+			&:nth-child(#{$i + 1}) {
+				transform: rotateY($i*90deg) 
+					translateZ(.5*$cube-edge);
+			}
+		}
+		
+		&:last-child:before {
+			@include tile(0, 1);
+		}
+	}
+}
+
+@keyframes r {
+	to { transform: rotateY(-90deg); }
+}
